@@ -311,10 +311,9 @@ resource "aws_instance" "dsa_linux" {
   user_data = data.template_file.linuxshell.rendered
 
   tags = {
-    Name = "dsa-linux-felix"
+    Name = "dsa-awslinux-felix"
   }
 }
-
 
 
 resource "aws_instance" "dsa_windows" {
@@ -333,7 +332,7 @@ resource "aws_instance" "dsa_windows" {
   get_password_data = true
 
   tags = {
-    Name = "dsa-windows-felix"
+    Name = "dsa-awswindows-felix"
   }
 }
 
