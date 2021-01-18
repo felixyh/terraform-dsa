@@ -125,7 +125,7 @@ resource "aws_security_group" "cncorelab-sg" {
     from_port   = 4118
     to_port     = 4122
     protocol    = "tcp"
-    cidr_blocks = ["54.221.196.0/24"]
+    cidr_blocks = ["54.221.196.0/24", "34.205.5.0/27"]
   }
 
   egress {
