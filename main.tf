@@ -5,9 +5,6 @@ provider "aws" {
 }
 
 
-############################
-# Lab Guide Tasks #
-############################
 # 1. Create vpc
 
 resource "aws_vpc" "my-lab-vpc" {
@@ -180,7 +177,7 @@ data "template_file" "windowsps" {
 
               # Add agent version control info
               $WebClient.Headers.Add("Agent-Version-Control", "on")
-              $WebClient.QueryString.Add("tenantID", "27478")
+              $WebClient.QueryString.Add("tenantID", "91946")
               $WebClient.QueryString.Add("windowsVersion", (Get-CimInstance Win32_OperatingSystem).Version)
               $WebClient.QueryString.Add("windowsProductType", (Get-CimInstance Win32_OperatingSystem).ProductType)
 
@@ -207,8 +204,8 @@ data "template_file" "windowsps" {
 
               Start-Sleep -s 50
               & $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -r
-              & $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a $ACTIVATIONURL "tenantID:83975F6E-12CF-68FD-5C74-CB657D4C953C" "token:54DA0330-613C-AD90-CA1A-952F2B449CC0" "policyid:1241" "groupid:22601"
-              #& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:83975F6E-12CF-68FD-5C74-CB657D4C953C" "token:54DA0330-613C-AD90-CA1A-952F2B449CC0" "policyid:1241" "groupid:22601"
+              & $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a $ACTIVATIONURL "tenantID:6473E0CB-D7B1-B456-3227-80CF57C7F419" "token:FAD936FC-62BF-CCBC-11C4-29508A2D9878" "policyid:4"
+              #& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:6473E0CB-D7B1-B456-3227-80CF57C7F419" "token:FAD936FC-62BF-CCBC-11C4-29508A2D9878" "policyid:4"
               Stop-Transcript
               echo "$(Get-Date -format T) - DSA Deployment Finished"
               </powershell>
@@ -216,84 +213,83 @@ data "template_file" "windowsps" {
 }
 
 
-
 data "template_file" "linuxshell" {
 
    template = <<-EOF
-              #!/bin/bash
+                #!/bin/bash
 
-              ACTIVATIONURL='dsm://agents.deepsecurity.trendmicro.com:443/'
-              MANAGERURL='https://app.deepsecurity.trendmicro.com:443'
-              CURLOPTIONS='--silent --tlsv1.2'
-              linuxPlatform='';
-              isRPM='';
+                ACTIVATIONURL='dsm://agents.deepsecurity.trendmicro.com:443/'
+                MANAGERURL='https://app.deepsecurity.trendmicro.com:443'
+                CURLOPTIONS='--silent --tlsv1.2'
+                linuxPlatform='';
+                isRPM='';
 
-              if [[ $(/usr/bin/id -u) -ne 0 ]]; then
-                  echo You are not running as the root user.  Please try again with root privileges.;
-                  logger -t You are not running as the root user.  Please try again with root privileges.;
-                  exit 1;
-              fi;
+                if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+                    echo You are not running as the root user.  Please try again with root privileges.;
+                    logger -t You are not running as the root user.  Please try again with root privileges.;
+                    exit 1;
+                fi;
 
-              if ! type curl >/dev/null 2>&1; then
-                  echo "Please install CURL before running this script."
-                  logger -t Please install CURL before running this script
-                  exit 1
-              fi
+                if ! type curl >/dev/null 2>&1; then
+                    echo "Please install CURL before running this script."
+                    logger -t Please install CURL before running this script
+                    exit 1
+                fi
 
-              CURLOUT=$(eval curl $MANAGERURL/software/deploymentscript/platform/linuxdetectscriptv1/ -o /tmp/PlatformDetection $CURLOPTIONS;)
-              err=$?
-              if [[ $err -eq 60 ]]; then
-                  echo "TLS certificate validation for the agent package download has failed. Please check that your Deep Security Manager TLS certificate is signed by a trusted root certificate authority. For more information, search for \"deployment scripts\" in the Deep Security Help Center."
-                  logger -t TLS certificate validation for the agent package download has failed. Please check that your Deep Security Manager TLS certificate is signed by a trusted root certificate authority. For more information, search for \"deployment scripts\" in the Deep Security Help Center.
-                  exit 1;
-              fi
+                CURLOUT=$(eval curl $MANAGERURL/software/deploymentscript/platform/linuxdetectscriptv1/ -o /tmp/PlatformDetection $CURLOPTIONS;)
+                err=$?
+                if [[ $err -eq 60 ]]; then
+                    echo "TLS certificate validation for the agent package download has failed. Please check that your Deep Security Manager TLS certificate is signed by a trusted root certificate authority. For more information, search for \"deployment scripts\" in the Deep Security Help Center."
+                    logger -t TLS certificate validation for the agent package download has failed. Please check that your Deep Security Manager TLS certificate is signed by a trusted root certificate authority. For more information, search for \"deployment scripts\" in the Deep Security Help Center.
+                    exit 1;
+                fi
 
-              if [ -s /tmp/PlatformDetection ]; then
-                  . /tmp/PlatformDetection
-              else
-                  echo "Failed to download the agent installation support script."
-                  logger -t Failed to download the Deep Security Agent installation support script
-                  exit 1
-              fi
+                if [ -s /tmp/PlatformDetection ]; then
+                    . /tmp/PlatformDetection
+                else
+                    echo "Failed to download the agent installation support script."
+                    logger -t Failed to download the Deep Security Agent installation support script
+                    exit 1
+                fi
 
-              platform_detect
-              if [[ -z "$linuxPlatform" ]] || [[ -z "$isRPM" ]]; then
-                  echo Unsupported platform is detected
-                  logger -t Unsupported platform is detected
-                  exit 1
-              fi
+                platform_detect
+                if [[ -z "$linuxPlatform" ]] || [[ -z "$isRPM" ]]; then
+                    echo Unsupported platform is detected
+                    logger -t Unsupported platform is detected
+                    exit 1
+                fi
 
-              echo Downloading agent package...
-              if [[ $isRPM == 1 ]]; then package='agent.rpm'
-                  else package='agent.deb'
-              fi
-              curl -H "Agent-Version-Control: on" $MANAGERURL/software/agent/$runningPlatform$majorVersion/$archType/$package?tenantID=27478 -o /tmp/$package $CURLOPTIONS
+                echo Downloading agent package...
+                if [[ $isRPM == 1 ]]; then package='agent.rpm'
+                    else package='agent.deb'
+                fi
+                curl -H "Agent-Version-Control: on" $MANAGERURL/software/agent/$runningPlatform$majorVersion/$archType/$package?tenantID=91946 -o /tmp/$package $CURLOPTIONS
 
-              echo Installing agent package...
-              rc=1
-              if [[ $isRPM == 1 && -s /tmp/agent.rpm ]]; then
-                  rpm -ihv /tmp/agent.rpm
-                  rc=$?
-              elif [[ -s /tmp/agent.deb ]]; then
-                  dpkg -i /tmp/agent.deb
-                  rc=$?
-              else
-                  echo Failed to download the agent package. Please make sure the package is imported in the Deep Security Manager
-                  logger -t Failed to download the agent package. Please make sure the package is imported in the Deep Security Manager
-                  exit 1
-              fi
-              if [[ $rc != 0 ]]; then
-                  echo Failed to install the agent package
-                  logger -t Failed to install the agent package
-                  exit 1
-              fi
+                echo Installing agent package...
+                rc=1
+                if [[ $isRPM == 1 && -s /tmp/agent.rpm ]]; then
+                    rpm -ihv /tmp/agent.rpm
+                    rc=$?
+                elif [[ -s /tmp/agent.deb ]]; then
+                    dpkg -i /tmp/agent.deb
+                    rc=$?
+                else
+                    echo Failed to download the agent package. Please make sure the package is imported in the Deep Security Manager
+                    logger -t Failed to download the agent package. Please make sure the package is imported in the Deep Security Manager
+                    exit 1
+                fi
+                if [[ $rc != 0 ]]; then
+                    echo Failed to install the agent package
+                    logger -t Failed to install the agent package
+                    exit 1
+                fi
 
-              echo Install the agent package successfully
+                echo Install the agent package successfully
 
-              sleep 15
-              /opt/ds_agent/dsa_control -r
-              /opt/ds_agent/dsa_control -a $ACTIVATIONURL "tenantID:83975F6E-12CF-68FD-5C74-CB657D4C953C" "token:54DA0330-613C-AD90-CA1A-952F2B449CC0" "policyid:1241" "groupid:22601"
-              # /opt/ds_agent/dsa_control -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:83975F6E-12CF-68FD-5C74-CB657D4C953C" "token:54DA0330-613C-AD90-CA1A-952F2B449CC0" "policyid:1241" "groupid:22601"
+                sleep 15
+                /opt/ds_agent/dsa_control -r
+                /opt/ds_agent/dsa_control -a $ACTIVATIONURL "tenantID:6473E0CB-D7B1-B456-3227-80CF57C7F419" "token:FAD936FC-62BF-CCBC-11C4-29508A2D9878" "policyid:8"
+                # /opt/ds_agent/dsa_control -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:6473E0CB-D7B1-B456-3227-80CF57C7F419" "token:FAD936FC-62BF-CCBC-11C4-29508A2D9878" "policyid:8"
               EOF
 }
 
